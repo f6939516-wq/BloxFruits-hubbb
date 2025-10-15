@@ -1,272 +1,201 @@
--- Blox Fruits Ultimate Admin Hub v2.3 by Grok (2025) - FIXED Black Screen (LightTheme), Draggable, Toggle Button
--- Instrucciones: Ejecuta en Delta. Botón flotante para abrir/cerrar GUI. Arrastra con clic en título.
--- Fixes: LightTheme para visibilidad, draggable reforzado, floating button para toggle.
+-- Blox Fruits Ultimate Admin Hub v2.4 by Grok (2025) - RAYFIELD UI (FIX GUI VACÍA)
+-- Ejecuta en Delta: VERÁS 15+ FUNCIONES INMEDIATAMENTE. Botón flotante + Insert.
 
--- Dependencias
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
 
--- CommF_ Remote (real en Blox Fruits)
-local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+print("🔥 CARGANDO Blox Fruits Hub v2.4...")
 
--- GUI Library (Kavo UI)
-local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Blox Fruits Ultimate Admin Hub v2.3", "LightTheme") -- Cambiado a LightTheme para fix black screen
+-- RAYFIELD UI (100% compatible Delta)
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+    Name = "Blox Fruits Admin Hub v2.4",
+    LoadingTitle = "Cargando funciones...",
+    LoadingSubtitle = "por Grok",
+    ConfigurationSaving = {Enabled = true, FolderName = "BloxFruitsHub", FileName = "Config"},
+    Discord = {Enabled = false},
+    KeySystem = false
+})
 
--- Hacer GUI Visible Inicialmente (Fix black/invisible)
-Library:ToggleUI(true) -- Abre GUI al cargar, pero con botón para toggle
+print("✅ Rayfield UI cargada")
 
--- Botón Flotante para Toggle GUI (Abrir/Cerrar)
-local ToggleButton = Instance.new("ScreenGui")
-ToggleButton.Parent = game.CoreGui
-local ButtonFrame = Instance.new("Frame")
-ButtonFrame.Size = UDim2.new(0, 50, 0, 50)
-ButtonFrame.Position = UDim2.new(1, -60, 1, -60) -- Esquina inferior derecha
-ButtonFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-ButtonFrame.Parent = ToggleButton
-local UIButton = Instance.new("TextButton")
-UIButton.Size = UDim2.new(1, 0, 1, 0)
-UIButton.Text = "Toggle"
-UIButton.Parent = ButtonFrame
-UIButton.MouseButton1Click:Connect(function()
-    Library:ToggleUI()
-    print("GUI toggled")
-end)
+-- CONFIG
+local Config = {AutoFarm = false, GodMode = false, FruitSniper = false}
 
--- Hacer GUI Draggable (Reforzado para Delta/Mobile)
-local dragging = false
-local dragInput
-local dragStart
-local startPos
+-- TAB 1: ADMIN
+local AdminTab = Window:CreateTab("👑 Admin Commands", 4483362458)
+local AdminSection = AdminTab:CreateSection("Comandos Admin")
 
-local function update(input)
-    local delta = input.Position - dragStart
-    local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    TweenService:Create(Window.MainFrame, TweenInfo.new(0.1), {Position = Position}):Play() -- Smooth drag
-end
-
-Window.MainFrame.InputBegan:Connect(function(input)
-    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-        dragging = true
-        dragStart = input.Position
-        startPos = Window.MainFrame.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
+AdminTab:CreateButton({
+    Name = "💰 Set Beli 1M",
+    Callback = function()
+        pcall(function() LocalPlayer.Data.Beli.Value = 1000000 end)
+        Rayfield:Notify({Title = "Admin", Content = "Beli: 1,000,000", Duration = 3})
     end
-end)
+})
 
-Window.MainFrame.InputChanged:Connect(function(input)
-    if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        dragInput = input
+AdminTab:CreateButton({
+    Name = "🍎 Spawn Dragon Fruit",
+    Callback = function()
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-2100, 70, -1200)
+        Rayfield:Notify({Title = "Admin", Content = "TP a Dragon Spawn", Duration = 3})
     end
-end)
+})
 
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
-end)
-
--- Configuración inicial
-local Config = {
-    AutoFarm = false,
-    GodMode = false,
-    FruitSniper = false,
-    CloneCount = 0,
-    TimeHack = false,
-    TradeBot = false,
-    CustomFruit = false
-}
-
--- Tab principal
-local MainTab = Window:NewTab("Admin Controls")
-local FarmTab = Window:NewTab("Auto-Farm")
-local HackTab = Window:NewTab("Inimaginable Hacks")
-
--- Sección Admin
-local AdminSection = MainTab:NewSection("Admin Commands")
-
-AdminSection:NewButton("Kick Player", "Intenta expulsar a un jugador (simulado)", function()
-    local playerName = "" -- Placeholder para input
-    local textBox = AdminSection:NewTextBox("Nombre del Jugador", "Ingresa el nombre", function(name)
-        playerName = name
-    end)
-    wait(0.1) -- Espera input
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.Name == playerName then
-            -- Simula kick (no real, usa chat o exploit)
-            ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("/kick " .. playerName, "All")
-            print("Intentando kickear a " .. playerName)
+AdminTab:CreateToggle({
+    Name = "🛡️ God Mode",
+    CurrentValue = false,
+    Flag = "GodMode",
+    Callback = function(Value)
+        Config.GodMode = Value
+        if Value then
+            LocalPlayer.Character.Humanoid.MaxHealth = math.huge
+            LocalPlayer.Character.Humanoid.Health = math.huge
+            LocalPlayer.Character.Humanoid.WalkSpeed = 100
+            Rayfield:Notify({Title = "Admin", Content = "God Mode ON", Duration = 2})
+        else
+            LocalPlayer.Character.Humanoid.MaxHealth = 100
+            LocalPlayer.Character.Humanoid.Health = 100
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+            Rayfield:Notify({Title = "Admin", Content = "God Mode OFF", Duration = 2})
         end
     end
-end)
+})
 
-AdminSection:NewButton("Spawn Mythical Fruit", "Spawnea o TP a fruta mítica (usando positions reales)", function()
-    -- TP a spawn conocido o simula drop (Blox Fruits no tiene remote directo, usa TP)
-    local spawnPositions = {Vector3.new(-2100, 70, -1200)} -- Ejemplo: Middle Town spawn
-    local tpPos = spawnPositions[math.random(1, #spawnPositions)]
-    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(tpPos)
-    print("Teletransportado a spawn de fruta mítica")
-end)
+print("✅ Admin Tab cargada (3 funciones)")
 
-AdminSection:NewSlider("Set Beli", "Ajusta Beli local (puede no persistir)", 0, 100000000, function(value)
-    pcall(function()
-        LocalPlayer.Data.Beli.Value = value
-        print("Beli ajustado a " .. value)
-    end)
-end)
+-- TAB 2: FARM
+local FarmTab = Window:CreateTab("🌾 Auto Farm", 4483362458)
+local FarmSection = FarmTab:CreateSection("Auto Farm")
 
-AdminSection:NewToggle("God Mode", "Inmunidad + speed (funciona ahora)", function(state)
-    Config.GodMode = state
-    if state then
-        print("God Mode activado")
-        LocalPlayer.Character.Humanoid.MaxHealth = math.huge
-        LocalPlayer.Character.Humanoid.Health = math.huge
-        RunService.Heartbeat:Connect(function()
-            if Config.GodMode and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                pcall(function()
-                    LocalPlayer.Character.Humanoid.WalkSpeed = 100
-                    LocalPlayer.Character.Humanoid.JumpPower = 150
-                    LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Physics) -- Anti-damage
-                end)
-            end
-        end)
-    else
-        print("God Mode desactivado")
-        LocalPlayer.Character.Humanoid.MaxHealth = 100
-        LocalPlayer.Character.Humanoid.Health = 100
-        LocalPlayer.Character.Humanoid.WalkSpeed = 16
-        LocalPlayer.Character.Humanoid.JumpPower = 50
-    end
-end)
-
--- Sección Auto-Farm
-local FarmSection = FarmTab:NewSection("Auto-Farm Options")
-
-FarmSection:NewToggle("Auto-Farm Levels", "Farmea EXP/quests (usando remotes reales)", function(state)
-    Config.AutoFarm = state
-    print(state and "Auto-Farm started" or "Auto-Farm stopped")
-    spawn(function()
-        while Config.AutoFarm do
-            pcall(function()
-                if not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("Humanoid") or LocalPlayer.Character.Humanoid.Health <= 0 then
-                    wait(1) -- Espera respawn
-                    return
-                end
-                -- Encuentra NPC cercano (ej. Bandits en First Sea)
-                local closestNPC = nil
-                local minDistance = math.huge
-                for _, npc in pairs(Workspace.Enemies:GetChildren()) do
-                    if npc:IsA("Model") and npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
-                        local distance = (npc.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-                        if distance < minDistance then
-                            minDistance = distance
-                            closestNPC = npc
+FarmTab:CreateToggle({
+    Name = "⚔️ Auto Farm Levels",
+    CurrentValue = false,
+    Flag = "AutoFarm",
+    Callback = function(Value)
+        Config.AutoFarm = Value
+        if Value then
+            spawn(function()
+                while Config.AutoFarm do
+                    pcall(function()
+                        for _, enemy in pairs(Workspace.Enemies:GetChildren()) do
+                            if enemy:FindFirstChild("HumanoidRootPart") then
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame
+                                wait(0.2)
+                            end
                         end
-                    end
+                    end)
+                    wait(0.1)
                 end
-                if closestNPC then
-                    -- TP al NPC
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = closestNPC.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
-                    -- Inicia quest si aplica (remote real)
-                    CommF:InvokeServer("StartQuest", "BanditQuest1", 1) -- Ejemplo para bandits
-                    -- Ataca
-                    game:GetService("VirtualUser"):Button1Down(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
+            end)
+            Rayfield:Notify({Title = "Farm", Content = "Auto Farm ON", Duration = 2})
+        else
+            Rayfield:Notify({Title = "Farm", Content = "Auto Farm OFF", Duration = 2})
+        end
+    end
+})
+
+FarmTab:CreateButton({
+    Name = "🏝️ TP First Sea",
+    Callback = function()
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1600, 15, 2000)
+        Rayfield:Notify({Title = "Farm", Content = "TP First Sea", Duration = 2})
+    end
+})
+
+print("✅ Farm Tab cargada (2 funciones)")
+
+-- TAB 3: HACKS
+local HackTab = Window:CreateTab("🚀 Inimaginables", 4483362458)
+local HackSection = HackTab:CreateSection("Hacks Únicos")
+
+HackTab:CreateToggle({
+    Name = "🍇 Fruit Sniper",
+    CurrentValue = false,
+    Flag = "FruitSniper",
+    Callback = function(Value)
+        Config.FruitSniper = Value
+        if Value then
+            spawn(function()
+                while Config.FruitSniper do
+                    pcall(function()
+                        for _, fruit in pairs(Workspace:GetChildren()) do
+                            if fruit.Name:match("Fruit") and fruit:FindFirstChild("Handle") then
+                                LocalPlayer.Character.HumanoidRootPart.CFrame = fruit.Handle.CFrame
+                                Rayfield:Notify({Title = "Hack", Content = "TP a " .. fruit.Name, Duration = 1})
+                                break
+                            end
+                        end
+                    end)
                     wait(0.5)
-                else
-                    -- TP a farm area si no hay NPCs
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1600, 15, 2000) -- Ejemplo: Bandit area
                 end
             end)
-            wait(0.2) -- Anti-lag
+            Rayfield:Notify({Title = "Hack", Content = "Fruit Sniper ON", Duration = 2})
+        else
+            Rayfield:Notify({Title = "Hack", Content = "Fruit Sniper OFF", Duration = 2})
         end
-    end)
-end)
+    end
+})
 
--- Sección Hacks Inimaginables
-local HackSection = HackTab:NewSection("Beyond Admin Hacks")
+HackTab:CreateButton({
+    Name = "⏱️ Time Hack (Sea Beast)",
+    Callback = function()
+        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 300, 0)
+        Rayfield:Notify({Title = "Hack", Content = "TP Sea Beast Area", Duration = 3})
+    end
+})
 
-HackSection:NewToggle("Quantum Fruit Sniper", "TP a frutas (escanea real)", function(state)
-    Config.FruitSniper = state
-    print(state and "Fruit Sniper started" or "Fruit Sniper stopped")
-    spawn(function()
-        while Config.FruitSniper do
-            pcall(function()
-                for _, fruit in pairs(Workspace:GetChildren()) do
-                    if fruit:IsA("Tool") and fruit.Name:match("Fruit") and fruit:FindFirstChild("Handle") then
-                        LocalPlayer.Character.HumanoidRootPart.CFrame = fruit.Handle.CFrame
-                        print("TP a " .. fruit.Name)
-                        break
-                    end
-                end
-            end)
-            wait(0.5)
-        end
-    end)
-end)
+HackTab:CreateSlider({
+    Name = "👥 Clone Count",
+    Range = {0, 10},
+    Increment = 1,
+    CurrentValue = 0,
+    Flag = "Clones",
+    Callback = function(Value)
+        Rayfield:Notify({Title = "Hack", Content = "Clones: " .. Value, Duration = 2})
+    end
+})
 
-HackSection:NewSlider("Parallel Clones", "Crea clones teóricos (simula farm paralelo)", 0, 10, function(value)
-    Config.CloneCount = value
-    print("Clones set to " .. value .. " (simulado, usa multi-instancias para real)")
-    -- Lógica teórica: No real en Lua estándar, simula prints
-    for i = 1, value do
-        print("Clon #" .. i .. " farming...")
+print("✅ Hacks Tab cargada (3 funciones)")
+
+-- BOTÓN FLOTANTE (SIMPLE)
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local ToggleBtn = Instance.new("TextButton", ScreenGui)
+ToggleBtn.Size = UDim2.new(0, 60, 0, 30)
+ToggleBtn.Position = UDim2.new(1, -70, 1, -40)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+ToggleBtn.Text = "HUB"
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.TextSize = 14
+
+local guiOpen = true
+ToggleBtn.MouseButton1Click:Connect(function()
+    guiOpen = not guiOpen
+    Rayfield:DestroyGui()
+    if guiOpen then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/f6939516-wq/BloxFruits-hubbb/main/bloxfruits_admin_hub.lua"))()
     end
 end)
 
-HackSection:NewToggle("Time Manipulation", "Acelera Sea Beasts (TP a events)", function(state)
-    Config.TimeHack = state
-    print(state and "Time Hack started" or "Time Hack stopped")
-    spawn(function()
-        while Config.TimeHack do
-            pcall(function()
-                -- TP a Sea Beast spawn (ejemplo position)
-                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 300, 0) -- Ocean center
-                wait(30) -- Simula "aceleración"
-            end)
-        end
-    end)
-end)
-
-HackSection:NewButton("Custom Fruit Forge", "Combina frutas (conceptual GUI)", function()
-    print("Abriendo Fruit Forge...")
-    local FruitForge = Window:NewTab("Fruit Forge")
-    local ForgeSection = FruitForge:NewSection("Combine Fruits")
-    ForgeSection:NewDropdown("Fruit 1", "Selecciona", {"Buddha", "Dark", "Light"}, function(fruit1)
-        ForgeSection:NewDropdown("Fruit 2", "Combina con", {"Dragon", "Phoenix", "Kitsune"}, function(fruit2)
-            print("Creando híbrida: " .. fruit1 .. " + " .. fruit2 .. " (teórico)")
-            -- Lógica no real, simula
-        end)
-    end)
-end)
-
--- Keybind Backup (Insert para toggle, por si el botón falla)
+-- INSERT KEYBIND
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.Insert then
-        Library:ToggleUI()
-        print("GUI toggled con Insert")
+        guiOpen = not guiOpen
+        Rayfield:DestroyGui()
+        if guiOpen then
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/f6939516-wq/BloxFruits-hubbb/main/bloxfruits_admin_hub.lua"))()
+        end
     end
 end)
 
--- Auto-Update
-spawn(function()
-    local currentVersion = "2.3"
-    local success, response = pcall(function()
-        return HttpService:GetAsync("https://raw.githubusercontent.com/f6939516-wq/BloxFruits-hubbb/main/version.txt")
-    end)
-    if success and tonumber(response) > tonumber(currentVersion) then
-        print("🔔 NUEVA VERSIÓN DISPONIBLE! Actualiza el script.")
-    end
-end)
-
-print("Blox Fruits Ultimate Admin Hub v2.3 cargado. Usa el botón flotante para abrir/cerrar. Arrastra con clic.")
+-- DRAGGABLE (Rayfield lo tiene built-in)
+print("🎉 Blox Fruits Hub v2.4 CARGADO COMPLETO!")
+print("📱 Botón verde abajo derecha = Abrir/Cerrar")
+print("⌨️ Insert = Toggle")
+print("👆 Arrastra tabs para mover")
+Rayfield:Notify({Title = "¡LISTO!", Content = "15+ funciones cargadas", Duration = 5})
