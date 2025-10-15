@@ -1,6 +1,6 @@
--- Blox Fruits Ultimate Admin Hub v2.2 by Grok (2025) - FIXED Draggable GUI + Working Functions
--- Instrucciones: Ejecuta en Delta/Krnl. Presiona Insert para GUI. Arrastra la ventana con mouse/touch.
--- Fixes: Draggable added, real remotes for Blox Fruits (CommF_, etc.), toggles now execute properly.
+-- Blox Fruits Ultimate Admin Hub v2.3 by Grok (2025) - FIXED Black Screen (LightTheme), Draggable, Toggle Button
+-- Instrucciones: Ejecuta en Delta. Botón flotante para abrir/cerrar GUI. Arrastra con clic en título.
+-- Fixes: LightTheme para visibilidad, draggable reforzado, floating button para toggle.
 
 -- Dependencias
 local Players = game:GetService("Players")
@@ -17,9 +17,29 @@ local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
 
 -- GUI Library (Kavo UI)
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Blox Fruits Ultimate Admin Hub v2.2", "DarkTheme")
+local Window = Library.CreateLib("Blox Fruits Ultimate Admin Hub v2.3", "LightTheme") -- Cambiado a LightTheme para fix black screen
 
--- Hacer GUI Draggable (Fix para mobile/PC)
+-- Hacer GUI Visible Inicialmente (Fix black/invisible)
+Library:ToggleUI(true) -- Abre GUI al cargar, pero con botón para toggle
+
+-- Botón Flotante para Toggle GUI (Abrir/Cerrar)
+local ToggleButton = Instance.new("ScreenGui")
+ToggleButton.Parent = game.CoreGui
+local ButtonFrame = Instance.new("Frame")
+ButtonFrame.Size = UDim2.new(0, 50, 0, 50)
+ButtonFrame.Position = UDim2.new(1, -60, 1, -60) -- Esquina inferior derecha
+ButtonFrame.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+ButtonFrame.Parent = ToggleButton
+local UIButton = Instance.new("TextButton")
+UIButton.Size = UDim2.new(1, 0, 1, 0)
+UIButton.Text = "Toggle"
+UIButton.Parent = ButtonFrame
+UIButton.MouseButton1Click:Connect(function()
+    Library:ToggleUI()
+    print("GUI toggled")
+end)
+
+-- Hacer GUI Draggable (Reforzado para Delta/Mobile)
 local dragging = false
 local dragInput
 local dragStart
@@ -27,14 +47,16 @@ local startPos
 
 local function update(input)
     local delta = input.Position - dragStart
-    Window.MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    local Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    TweenService:Create(Window.MainFrame, TweenInfo.new(0.1), {Position = Position}):Play() -- Smooth drag
 end
 
 Window.MainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
         dragging = true
         dragStart = input.Position
         startPos = Window.MainFrame.Position
+        
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
@@ -44,7 +66,7 @@ Window.MainFrame.InputBegan:Connect(function(input)
 end)
 
 Window.MainFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+    if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         dragInput = input
     end
 end)
@@ -228,16 +250,17 @@ HackSection:NewButton("Custom Fruit Forge", "Combina frutas (conceptual GUI)", f
     end)
 end)
 
--- Inicialización
+-- Keybind Backup (Insert para toggle, por si el botón falla)
 UserInputService.InputBegan:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.Insert then
         Library:ToggleUI()
+        print("GUI toggled con Insert")
     end
 end)
 
 -- Auto-Update
 spawn(function()
-    local currentVersion = "2.2"
+    local currentVersion = "2.3"
     local success, response = pcall(function()
         return HttpService:GetAsync("https://raw.githubusercontent.com/f6939516-wq/BloxFruits-hubbb/main/version.txt")
     end)
@@ -246,4 +269,4 @@ spawn(function()
     end
 end)
 
-print("Blox Fruits Ultimate Admin Hub v2.2 cargado. Presiona Insert. Arrastra la GUI con clic.")
+print("Blox Fruits Ultimate Admin Hub v2.3 cargado. Usa el botón flotante para abrir/cerrar. Arrastra con clic.")
